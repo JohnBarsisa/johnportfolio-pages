@@ -19,9 +19,9 @@ jobs:
         shell: bash
         run: |
           curl --fail --location --retry 3 --silent --show-error \
-            https://github.com/JohnBarsisa/johnportfolio-pages/releases/download/v1.0.0/jk-portfolio-pages-v1.tar.gz \
+            https://github.com/JohnBarsisa/johnportfolio-pages/releases/download/v1.0.1/jk-portfolio-pages-v1.0.1.tar.gz \
             --output site.tar.gz
-          printf '%s\n' 'bb534a9889196d541a2dc7c6b20267001eb482c32ed3bfcc5738fc113aa943b5  site.tar.gz' | sha256sum --check
+          printf '%s\n' 'd3a3905f789c3d628bcb058d4f7cfc3058fb801ded003ed56c93fcdbd53fe814  site.tar.gz' | sha256sum --check
           mkdir public
           tar --extract --gzip --file site.tar.gz --directory public --no-same-owner --no-same-permissions
           test -s public/index.html
