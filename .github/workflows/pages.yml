@@ -14,7 +14,12 @@ concurrency:
 jobs:
   package:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Download and verify the reviewed static build
         shell: bash
         run: |
@@ -25,6 +30,17 @@ jobs:
           mkdir public
           tar --extract --gzip --file site.tar.gz --directory public --no-same-owner --no-same-permissions
           test -s public/index.html
+      - name: Install the shared tech-stack pad on the portfolio home page
+        run: |
+          node --check enhancements/tech-stack-pad.js
+          cp enhancements/tech-stack-pad.js public/
+          python3 - <<'PY'
+          from pathlib import Path
+          page = Path('public/index.html')
+          html = page.read_text()
+          assert '</body>' in html
+          page.write_text(html.replace('</body>', '<script defer src="./tech-stack-pad.js"></script></body>', 1))
+          PY
       - uses: actions/upload-pages-artifact@v4
         with:
           path: public
