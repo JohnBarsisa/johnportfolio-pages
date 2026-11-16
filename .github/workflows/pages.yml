@@ -58,3 +58,34 @@ jobs:
       - name: Publish to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Check the deployed portfolio in Chrome
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          cd "$RUNNER_TEMP"
+          npm install --no-save --ignore-scripts playwright-core@1.55.0
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { chromium } from 'playwright-core';
+          const browser = await chromium.launch({channel:'chrome',args:['--no-sandbox']});
+          try {
+            for (const width of [390,1280]) {
+              const page = await browser.newPage({viewport:{width,height:850},reducedMotion:'reduce'});
+              const response = await page.goto(process.env.PAGE_URL + '#experience');
+              assert.equal(response.status(),200);
+              await page.locator('section#experience').waitFor({state:'attached'});
+              const pad = page.locator('section#skills[data-pad-ready]');
+              await pad.waitFor();
+              await pad.evaluate(el => el.scrollIntoView({block:'center',behavior:'instant'}));
+              const buttons = pad.locator('.jk-pad-key');
+              assert.equal(await buttons.count(),25);
+              await buttons.nth(2).click();
+              await page.waitForFunction(() => document.querySelector('.jk-pad-detail strong')?.textContent.includes('React'));
+              await page.keyboard.press('1');
+              await page.waitForFunction(() => document.querySelector('.jk-pad-detail strong')?.textContent.includes('JavaScript'));
+              await pad.getByRole('button',{name:'Next pad'}).click();
+              await page.waitForFunction(() => document.querySelector('.jk-pad-detail strong')?.textContent.includes('TypeScript'));
+              await page.close();
+            }
+          } finally { await browser.close(); }
+          JS
